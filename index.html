@@ -65,52 +65,40 @@
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 font-sans antialiased h-full flex flex-col transition-colors duration-200">
 
   <!-- TOP NAVIGATION HEADER -->
-  <header class="h-14 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-3 flex items-center justify-between shrink-0 z-30 shadow-sm gap-2">
+  <header class="h-14 bg-white border-b border-slate-200 px-3 flex items-center justify-between shrink-0 z-30 shadow-sm gap-2">
     <!-- Brand Logo -->
     <div class="flex items-center gap-2 shrink-0">
-      <div class="bg-emerald-600 dark:bg-emerald-500 text-white dark:text-slate-950 px-2.5 py-1 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 whitespace-nowrap">
+      <div class="bg-emerald-600 text-white px-2.5 py-1 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 whitespace-nowrap">
         <i class="fa-solid fa-store"></i>
         <span class="tracking-wide">LAGRANA STORE</span>
       </div>
       <div class="hidden lg:block">
-        <h1 class="font-bold text-xs text-slate-800 dark:text-slate-200 leading-none whitespace-nowrap">Sari-Sari Digital Cashier</h1>
+        <h1 class="font-bold text-xs text-slate-800 leading-none whitespace-nowrap">Sari-Sari Digital Cashier</h1>
       </div>
     </div>
 
     <!-- Navigation Tabs -->
-    <nav class="flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold gap-1 shrink-0">
-      <button onclick="switchTab('pos')" id="tab-pos" class="tab-btn px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950 shadow-sm">
+    <nav class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold gap-1 shrink-0">
+      <button onclick="switchTab('pos')" id="tab-pos" class="tab-btn px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap bg-emerald-600 text-white shadow-sm">
         <i class="fa-solid fa-cash-register"></i> POS Terminal
       </button>
-      <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+      <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900">
         <i class="fa-solid fa-boxes-stacked"></i> Inventory & Stock
       </button>
-      <button onclick="switchTab('utang')" id="tab-utang" class="tab-btn px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+      <button onclick="switchTab('utang')" id="tab-utang" class="tab-btn px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900">
         <i class="fa-solid fa-book-bookmark"></i> Utang Ledger
       </button>
-      <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+      <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900">
         <i class="fa-solid fa-chart-line"></i> Sales & Profit
       </button>
     </nav>
 
-    <!-- Header Tools: Backup, Theme Toggle, Clock -->
+    <!-- Header Tools: Backup Only -->
     <div class="flex items-center gap-1.5 text-xs shrink-0">
-      <!-- Theme Toggle -->
-      <button onclick="toggleDarkMode()" id="theme-toggle-btn" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 font-bold flex items-center gap-1.5 touch-active whitespace-nowrap">
-        <i class="fa-solid fa-sun text-amber-500 dark:hidden"></i>
-        <i class="fa-solid fa-moon text-sky-400 hidden dark:inline"></i>
-        <span id="theme-text-mode" class="hidden sm:inline whitespace-nowrap">Light Mode</span>
+      <button onclick="openModal('modal-backup')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-300 font-bold flex items-center gap-1.5 touch-active whitespace-nowrap" title="Backup & Restore Data">
+        <i class="fa-solid fa-database text-emerald-600"></i>
+        <span class="whitespace-nowrap">Backup Data</span>
       </button>
-
-      <!-- Data Backup Dropdown Trigger -->
-      <button onclick="openModal('modal-backup')" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 font-bold flex items-center gap-1 touch-active whitespace-nowrap" title="Backup & Restore Data">
-        <i class="fa-solid fa-database text-emerald-600 dark:text-emerald-400"></i>
-        <span class="hidden md:inline whitespace-nowrap">Backup</span>
-      </button>
-
-      <div id="live-clock" class="font-mono text-slate-700 dark:text-slate-300 font-bold bg-slate-200 dark:bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-800 whitespace-nowrap">
-        --:--:--
-      </div>
     </div>
   </header>
 
@@ -909,24 +897,6 @@ function initFirebaseSync() {
   });
 }
 
-    // Light/Dark Theme Engine
-    function initTheme() {
-      if (STATE.theme === 'dark') {
-        document.documentElement.classList.add('dark');
-        document.getElementById('theme-text-mode').innerText = 'Dark Mode';
-      } else {
-        document.documentElement.classList.remove('dark');
-        document.getElementById('theme-text-mode').innerText = 'Light Mode';
-      }
-    }
-
-    function toggleDarkMode() {
-      STATE.theme = STATE.theme === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('pos_theme', STATE.theme);
-      initTheme();
-      AudioEngine.beep(900, 0.05);
-    }
-
     function resetDataToDefaults() {
       if (confirm("Reset store inventory data back to factory defaults?")) {
         STATE.products = [...DEFAULT_PRODUCTS];
@@ -936,21 +906,15 @@ function initFirebaseSync() {
       }
     }
 
-    function updateClock() {
-      const now = new Date();
-      document.getElementById('live-clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    }
-    setInterval(updateClock, 1000);
-
     function switchTab(tabName) {
   document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
   document.querySelectorAll('.tab-btn').forEach(el => {
-    el.className = "tab-btn px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
+    el.className = "tab-btn px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900";
   });
 
   document.getElementById(`view-${tabName}`).classList.remove('hidden');
   const activeBtn = document.getElementById(`tab-${tabName}`);
-  activeBtn.className = "tab-btn px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950 shadow-sm";
+  activeBtn.className = "tab-btn px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap bg-emerald-600 text-white shadow-sm";
 
   if (tabName === 'pos') renderPOSGrid();
   if (tabName === 'inventory') renderInventory();
@@ -2081,7 +2045,7 @@ function initFirebaseSync() {
     }
 
     window.onload = () => {
-  initTheme();
+  document.documentElement.classList.remove('dark'); // Guarantees light mode
   initFirebaseSync();
   renderPOSGrid();
   renderInventory();
