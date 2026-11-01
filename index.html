@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>LAGRANA STORE - Digital Cashier & Utang Ledger</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -796,8 +801,23 @@
     </div>
   </div>
 
-  <!-- APPLICATION JAVASCRIPT ENGINE -->
+  <!-- MAIN APPLICATION SCRIPT -->
   <script>
+    // Firebase Setup
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHKReaEhDxEPc1t68hDY_Jaefs2nbW2xE",
+      authDomain: "lagrana-store.firebaseapp.com",
+      projectId: "lagrana-store",
+      storageBucket: "lagrana-store.firebasestorage.app",
+      messagingSenderId: "828595115082",
+      appId: "1:828595115082:web:955da2aaa05d4929a3c2b3",
+      measurementId: "G-SFS76JXZXG"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    db.enablePersistence().catch(err => console.log("Persistence error:", err));
+
     // Audio Sound Synthesizer
     const AudioEngine = {
       ctx: null,
@@ -859,11 +879,35 @@
     };
 
     function saveState() {
-      localStorage.setItem('pos_products', JSON.stringify(STATE.products));
-      localStorage.setItem('pos_customers', JSON.stringify(STATE.customers));
-      localStorage.setItem('pos_transactions', JSON.stringify(STATE.transactions));
-      localStorage.setItem('pos_debt_payments', JSON.stringify(STATE.debtPayments));
-    }
+  // Sync to Firebase Cloud
+  db.collection('store_data').doc('products').set({ items: STATE.products });
+  db.collection('store_data').doc('customers').set({ items: STATE.customers });
+  db.collection('store_data').doc('transactions').set({ items: STATE.transactions });
+  db.collection('store_data').doc('debtPayments').set({ items: STATE.debtPayments });
+
+  // Local backup fallback
+  localStorage.setItem('pos_products', JSON.stringify(STATE.products));
+  localStorage.setItem('pos_customers', JSON.stringify(STATE.customers));
+  localStorage.setItem('pos_transactions', JSON.stringify(STATE.transactions));
+  localStorage.setItem('pos_debt_payments', JSON.stringify(STATE.debtPayments));
+}
+function initFirebaseSync() {
+  db.collection('store_data').onSnapshot(snapshot => {
+    snapshot.forEach(doc => {
+      const data = doc.data().items;
+      if (!data) return;
+
+      if (doc.id === 'products') STATE.products = data;
+      if (doc.id === 'customers') STATE.customers = data;
+      if (doc.id === 'transactions') STATE.transactions = data;
+      if (doc.id === 'debtPayments') STATE.debtPayments = data;
+    });
+
+    renderPOSGrid();
+    renderInventory();
+    renderUtang();
+  });
+}
 
     // Light/Dark Theme Engine
     function initTheme() {
@@ -2037,11 +2081,12 @@
     }
 
     window.onload = () => {
-      initTheme();
-      renderPOSGrid();
-      renderInventory();
-      renderCart();
-    };
+  initTheme();
+  initFirebaseSync();
+  renderPOSGrid();
+  renderInventory();
+  renderCart();
+};
   </script>
 </body>
 </html>
