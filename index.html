@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LAGRANA STORE - Digital Cashier & Utang Ledger</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    html, body {
+      height: 100%;
+      max-height: 100vh;
+      overflow: hidden;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    input, select, textarea {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    .touch-active:active {
+      transform: scale(0.96);
+      opacity: 0.9;
+    }
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(148, 163, 184, 0.1);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 0.7);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 font-sans antialiased h-full flex flex-col transition-colors duration-200">
+
+  <!-- TOP NAVIGATION HEADER -->
+  <header class="h-14 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between shrink-0 z-30 shadow-sm">
+    <div class="flex items-center gap-3">
+      <div class="bg-emerald-600 dark:bg-emerald-500 text-white dark:text-slate-950 px-3 py-1 rounded-xl font-black text-base flex items-center gap-2 shadow-md shadow-emerald-500/20">
+        <i class="fa-solid fa-store"></i>
+        <span class="tracking-wide">LAGRANA STORE</span>
+      </div>
+      <div>
+        <h1 class="font-bold text-xs text-slate-800 dark:text-slate-200 leading-none">Sari-Sari Digital Cashier</h1>
+        <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Tablet POS & Utang Ledger</p>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold">
+      <button onclick="switchTab('pos')" id="tab-pos" class="tab-btn px-4 py-2 rounded-lg transition flex items-center gap-2 bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950 shadow-sm">
+        <i class="fa-solid fa-cash-register"></i> POS Terminal
+      </button>
+      <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn px-4 py-2 rounded-lg transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+        <i class="fa-solid fa-boxes-stacked"></i> Inventory & Stock
+      </button>
+      <button onclick="switchTab('utang')" id="tab-utang" class="tab-btn px-4 py-2 rounded-lg transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+        <i class="fa-solid fa-book-bookmark"></i> Utang Ledger
+      </button>
+      <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn px-4 py-2 rounded-lg transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+        <i class="fa-solid fa-chart-line"></i> Sales & Profit
+      </button>
+    </nav>
+
+    <!-- Header Tools: Backup, Theme Toggle, Clock -->
+    <div class="flex items-center gap-2 text-xs">
+      <!-- Theme Toggle -->
+      <button onclick="toggleDarkMode()" id="theme-toggle-btn" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 font-bold flex items-center gap-1.5 touch-active">
+        <i class="fa-solid fa-sun text-amber-500 dark:hidden"></i>
+        <i class="fa-solid fa-moon text-sky-400 hidden dark:inline"></i>
+        <span id="theme-text-mode">Light Mode</span>
+      </button>
+
+      <!-- Data Backup Dropdown Trigger -->
+      <button onclick="openModal('modal-backup')" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 font-bold flex items-center gap-1 touch-active" title="Backup & Restore Data">
+        <i class="fa-solid fa-database text-emerald-600 dark:text-emerald-400"></i>
+        <span class="hidden xl:inline">Backup</span>
+      </button>
+
+      <div id="live-clock" class="font-mono text-slate-700 dark:text-slate-300 font-bold bg-slate-200 dark:bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-800">
+        --:--:--
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN VIEW CONTAINER -->
+  <main class="flex-1 overflow-hidden relative bg-slate-100 dark:bg-slate-900">
+
+    <!-- VIEW 1: POS TERMINAL -->
+    <section id="view-pos" class="view-panel h-full flex flex-row gap-3 p-3">
+      
+      <!-- LEFT PANE: Fast Sellers, Search & Product Catalog -->
+      <div class="w-[60%] flex flex-col gap-2.5 h-full overflow-hidden">
+        
+        <!-- Search & Custom Quick Item Bar -->
+        <div class="bg-white dark:bg-slate-950 p-2 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-2 shrink-0 shadow-sm">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+            <input type="text" id="pos-search" oninput="renderPOSGrid()" placeholder="Search item name, gasoline, feeds, meds..." class="w-full pl-9 pr-8 py-1.5 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:border-emerald-500 text-sm font-medium">
+            <button onclick="clearSearch()" id="clear-search-btn" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 dark:hover:text-white hidden">
+              <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+          </div>
+
+          <!-- Open Custom Sale Button -->
+          <button onclick="openModal('modal-custom-item')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 shadow touch-active shrink-0">
+            <i class="fa-solid fa-plus-circle"></i> Custom / Loose Sale
+          </button>
+        </div>
+
+        <!-- Pinned Fast-Sellers Bar -->
+        <div class="bg-white dark:bg-slate-950 p-2 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0 shadow-sm">
+          <div class="flex items-center justify-between mb-1.5 px-1">
+            <span class="text-[11px] font-black uppercase text-amber-600 dark:text-amber-400 flex items-center gap-1">
+              <i class="fa-solid fa-thumbtack"></i> Top Fast-Sellers (1-Tap Add)
+            </span>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Frequent Sari-Sari Items</span>
+          </div>
+          <div id="pos-pinned-bar" class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Category Pills Filter -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 shrink-0 scrollbar-none">
+          <button onclick="setCategoryFilter('all')" class="cat-pill active-pill px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950 border border-emerald-500 min-h-[38px] shadow-sm">
+            <i class="fa-solid fa-border-all mr-1"></i> All Items
+          </button>
+          <button onclick="setCategoryFilter('pinned')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-white text-slate-700 dark:bg-slate-950 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[38px]">
+            <i class="fa-solid fa-star text-amber-400 mr-1"></i> Pinned Only
+          </button>
+          <button onclick="setCategoryFilter('Grocery')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-white text-slate-700 dark:bg-slate-950 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[38px]">
+            <i class="fa-solid fa-basket-shopping text-amber-500 mr-1"></i> Grocery
+          </button>
+          <button onclick="setCategoryFilter('Fuel')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-white text-slate-700 dark:bg-slate-950 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[38px]">
+            <i class="fa-solid fa-gas-pump text-rose-500 mr-1"></i> Fuel
+          </button>
+          <button onclick="setCategoryFilter('Agrivet')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-white text-slate-700 dark:bg-slate-950 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[38px]">
+            <i class="fa-solid fa-wheat-awn text-emerald-500 mr-1"></i> Agri-Feeds
+          </button>
+          <button onclick="setCategoryFilter('Meds')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-white text-slate-700 dark:bg-slate-950 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[38px]">
+            <i class="fa-solid fa-capsules text-sky-500 mr-1"></i> Meds
+          </button>
+        </div>
+
+        <!-- Main Product Grid -->
+        <div id="pos-grid" class="flex-1 overflow-y-auto grid grid-cols-3 xl:grid-cols-4 gap-2.5 pr-1 align-content-start">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- RIGHT PANE: Cart & Integrated Touch Checkout Desk -->
+      <div class="w-[40%] bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden shadow-xl">
+        <!-- Cart Top Header -->
+        <div class="p-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 bg-slate-50 dark:bg-slate-900/50">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-cart-shopping text-emerald-600 dark:text-emerald-400 text-base"></i>
+            <h2 class="font-bold text-sm text-slate-900 dark:text-white">Current Basket</h2>
+            <span id="cart-item-count" class="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-400 text-xs font-bold px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-500/30">0 items</span>
+          </div>
+          <button onclick="clearCart()" class="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-xs font-bold px-2 py-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/30 touch-active">
+            <i class="fa-solid fa-trash-can mr-1"></i> Clear
+          </button>
+        </div>
+
+        <!-- Cart Items List -->
+        <div id="cart-items-container" class="flex-1 overflow-y-auto p-2.5 space-y-2 min-h-[60px]">
+          <!-- Cart Items Here -->
+        </div>
+
+        <!-- Checkout & Cash Desk Panel (Scrollable container to prevent bottom cut-off) -->
+        <div class="p-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 space-y-2 shrink-0 max-h-[70vh] overflow-y-auto">
+          <!-- Totals Banner -->
+          <div class="space-y-1 text-xs">
+            <div class="flex justify-between text-slate-500 dark:text-slate-400">
+              <span>Items Subtotal:</span>
+              <span id="cart-subtotal" class="font-bold text-slate-800 dark:text-slate-200">₱0.00</span>
+            </div>
+            <div class="flex justify-between text-base font-black text-slate-900 dark:text-white pt-1 border-t border-slate-200 dark:border-slate-800">
+              <span>GRAND TOTAL:</span>
+              <span id="cart-grandtotal" class="text-emerald-600 dark:text-emerald-400 text-xl font-mono">₱0.00</span>
+            </div>
+          </div>
+
+          <!-- Payment Mode Switcher -->
+          <div class="grid grid-cols-2 gap-1.5 pt-1">
+            <button onclick="setPaymentMethod('cash')" id="pay-btn-cash" class="pay-method-btn px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 border-2 border-emerald-600 bg-emerald-50 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 touch-active">
+              <i class="fa-solid fa-money-bill-wave text-sm"></i> CASH SALE
+            </button>
+            <button onclick="setPaymentMethod('utang')" id="pay-btn-utang" class="pay-method-btn px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 border-2 border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800 text-slate-600 dark:text-slate-400 touch-active">
+              <i class="fa-solid fa-book-bookmark text-sm"></i> UTANG (CREDIT)
+            </button>
+          </div>
+
+          <!-- CASH SALE DESK WITH BUILT-IN NUMPAD -->
+          <div id="cash-payment-desk" class="bg-white dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">Bayad (Cash Received)</span>
+              <div class="flex gap-2">
+                <button onclick="toggleTouchNumpad()" class="text-[10px] text-sky-600 dark:text-sky-400 hover:underline font-bold flex items-center gap-1">
+                  <i class="fa-solid fa-calculator"></i> <span id="numpad-toggle-text">Show Numpad</span>
+                </button>
+                <button onclick="setTenderExact()" class="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline font-bold">Exact Amount</button>
+              </div>
+            </div>
+            
+            <div class="relative">
+              <span class="absolute left-3 top-1.5 text-slate-400 text-base font-bold">₱</span>
+              <input type="number" inputmode="decimal" id="cash-tendered-input" oninput="calculateSukli()" placeholder="0.00" class="w-full pl-8 pr-3 py-1 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-mono font-bold text-lg focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <!-- Fast Bill Presets -->
+            <div class="grid grid-cols-6 gap-1">
+              <button onclick="addPresetTender(20)" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono font-bold text-[11px] py-1 rounded border border-slate-300 dark:border-slate-700 touch-active">₱20</button>
+              <button onclick="addPresetTender(50)" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono font-bold text-[11px] py-1 rounded border border-slate-300 dark:border-slate-700 touch-active">₱50</button>
+              <button onclick="addPresetTender(100)" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono font-bold text-[11px] py-1 rounded border border-slate-300 dark:border-slate-700 touch-active">₱100</button>
+              <button onclick="addPresetTender(200)" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono font-bold text-[11px] py-1 rounded border border-slate-300 dark:border-slate-700 touch-active">₱200</button>
+              <button onclick="addPresetTender(500)" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono font-bold text-[11px] py-1 rounded border border-slate-300 dark:border-slate-700 touch-active">₱500</button>
+              <button onclick="addPresetTender(1000)" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono font-bold text-[11px] py-1 rounded border border-slate-300 dark:border-slate-700 touch-active">₱1k</button>
+            </div>
+
+            <!-- COLLAPSIBLE TOUCH NUMPAD -->
+            <div id="touch-numpad" class="hidden grid grid-cols-3 gap-1 pt-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
+              <button onclick="pressNumpad('1')" class="py-1 rounded bg-white dark:bg-slate-800 font-mono font-bold text-sm text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 touch-active">1</button>
+              <button onclick="pressNumpad('2')" class="py-1 rounded bg-white dark:bg-slate-800 font-mono font-bold text-sm text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 touch-active">2</button>
+              <button onclick="pressNumpad('3')" class="py-1 rounded bg-white dark:bg-slate-800 font-mono font-bold text-sm text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 touch-active">3</button>
+              <button onclick="pressNumpad('4')" class="py-1 rounded bg-white dark:bg-slate-800 font-mono font-bold text-sm text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 touch-active">4</button>
+              <button onclick="pressNumpad('5')" class="py-1 rounded bg-white dark:bg-slate-800 font-mono font-bold text-sm text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 touch-active">5</button>
+              <button onclick="pressNumpad('6')" class="py-1 rounded bg-white dark:bg-slate-800 font-mono font-bold text-sm text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 touch-active">6</button>
+              <button onclick="pressNumpad('7')" class="py-1 rounded bg-white dark:bg-slate-800 font-mono font-bold text-sm text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 touch-active">7</button>
+              <button onclick="pressNumpad('8')" class="py-1 rounded bg-white dark:bg-slate-800 font-mono font-bold text-sm text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 touch-active">8</button>
+              <button onclick="pressNumpad('9')" class="py-1 rounded bg-white dark:bg-slate-800 font-mono font-bold text-sm text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 touch-active">9</button>
+              <button onclick="pressNumpad('C')" class="py-1 rounded bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-mono font-bold text-xs border border-rose-300 dark:border-rose-800 touch-active">C</button>
+              <button onclick="pressNumpad('0')" class="py-1 rounded bg-white dark:bg-slate-800 font-mono font-bold text-sm text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 touch-active">0</button>
+              <button onclick="pressNumpad('back')" class="py-1 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-mono font-bold text-xs border border-amber-300 dark:border-amber-800 touch-active"><i class="fa-solid fa-delete-left"></i></button>
+            </div>
+
+            <!-- Change (Sukli) Display Box -->
+            <div id="sukli-display-box" class="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/40 p-2 rounded-lg flex items-center justify-between">
+              <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300">SUKLI (CHANGE):</span>
+              <span id="sukli-amount" class="text-xl font-mono font-black text-emerald-600 dark:text-emerald-400">₱0.00</span>
+            </div>
+          </div>
+
+          <!-- UTANG SALE DESK -->
+          <div id="utang-payment-desk" class="bg-white dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 hidden">
+            <label class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase block">Pumili ng May Utang (Debtor Profile)</label>
+            <select id="utang-customer-select" onchange="updateUtangCustomerPreview()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg p-2 text-xs font-bold focus:outline-none focus:border-amber-500">
+            </select>
+
+            <!-- Custom Debtor Name Input (shown when "+ Type Custom / New Name" is chosen) -->
+            <div id="utang-custom-name-box" class="hidden">
+              <input type="text" id="utang-custom-name-input" placeholder="Type new customer name..." class="w-full p-2 bg-amber-50 dark:bg-slate-900 border border-amber-400 dark:border-amber-500/50 rounded-lg text-slate-900 dark:text-white text-xs font-bold focus:outline-none">
+            </div>
+
+            <div id="utang-credit-preview" class="text-[11px] bg-slate-50 dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800 flex justify-between">
+              <span class="text-slate-500 dark:text-slate-400">Existing Debt: <strong id="preview-debt" class="text-rose-600 dark:text-rose-400 font-bold">₱0.00</strong></span>
+              <span class="text-slate-500 dark:text-slate-400">Limit: <strong id="preview-limit" class="text-emerald-600 dark:text-emerald-400 font-bold">₱0.00</strong></span>
+            </div>
+          </div>
+
+          <!-- COMPLETE TRANSACTION BUTTON -->
+          <button onclick="processCheckout()" id="checkout-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-slate-950 font-black py-3 rounded-xl shadow-lg shadow-emerald-500/20 text-base flex items-center justify-center gap-2 touch-active cursor-pointer">
+            <i class="fa-solid fa-circle-check text-lg"></i>
+            <span>COMPLETE TRANSACTION</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: INVENTORY & REPACK MANAGER -->
+    <section id="view-inventory" class="view-panel h-full p-4 flex flex-col gap-3 hidden overflow-hidden">
+      <div class="bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-sm">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-boxes-stacked text-emerald-600 dark:text-emerald-400"></i> Stock Inventory & Bulk Repack Manager
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Fuel container cost breakdowns, Sack-to-Kg ratio calculators, and instant restock</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="resetDataToDefaults()" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-xs border border-slate-300 dark:border-slate-700 touch-active">
+            <i class="fa-solid fa-rotate-left mr-1"></i> Reset Defaults
+          </button>
+          <button onclick="openModal('modal-add-product')" class="bg-emerald-600 hover:bg-emerald-500 text-white dark:bg-emerald-500 dark:text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow touch-active">
+            <i class="fa-solid fa-plus font-black"></i> Add New Product
+          </button>
+        </div>
+      </div>
+
+      <!-- Inventory Table -->
+      <div class="flex-1 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col shadow-sm">
+        <div class="overflow-y-auto flex-1">
+          <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+            <thead class="bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-bold uppercase sticky top-0 border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="p-3">Product Name & Category</th>
+                <th class="p-3">Current Stock</th>
+                <th class="p-3">Wholesale Basis</th>
+                <th class="p-3">Unit Cost Price</th>
+                <th class="p-3">Selling Price</th>
+                <th class="p-3">Profit / Unit</th>
+                <th class="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-table-body" class="divide-y divide-slate-200 dark:divide-slate-800">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: UTANG LEDGER -->
+    <section id="view-utang" class="view-panel h-full p-4 flex flex-col gap-3 hidden overflow-hidden">
+      <div class="bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-sm">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-book-bookmark text-amber-500"></i> Listahan ng Utang (Credit Ledger)
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Track customer credit limits, view itemized debt history, and record Cash or GCash repayments</p>
+        </div>
+        <button onclick="openModal('modal-add-customer')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow touch-active">
+          <i class="fa-solid fa-user-plus"></i> Add Debtor Profile
+        </button>
+      </div>
+
+      <div id="utang-customers-grid" class="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pr-1 align-content-start">
+        <!-- Dynamic Utang Cards -->
+      </div>
+    </section>
+
+    <!-- VIEW 4: NET PROFIT & ANALYTICS -->
+    <section id="view-analytics" class="view-panel h-full p-4 flex flex-col gap-3 hidden overflow-hidden">
+      <div class="grid grid-cols-4 gap-3 shrink-0">
+        <div class="bg-white dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase block">Gross Revenue</span>
+          <p id="stat-revenue" class="text-2xl font-black font-mono text-slate-900 dark:text-white mt-1">₱0.00</p>
+          <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Cash + Utang Combined</span>
+        </div>
+        <div class="bg-white dark:bg-slate-950 p-3.5 rounded-xl border border-emerald-300 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-sm">
+          <span class="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold uppercase block">Real Net Profit</span>
+          <p id="stat-profit" class="text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">₱0.00</p>
+          <span class="text-[10px] text-emerald-600/80 dark:text-emerald-300/80 font-medium">(Gross Revenue - COGS)</span>
+        </div>
+        <div class="bg-white dark:bg-slate-950 p-3.5 rounded-xl border border-amber-300 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 shadow-sm">
+          <span class="text-[10px] text-amber-700 dark:text-amber-400 font-bold uppercase block">Uncollected Utang</span>
+          <p id="stat-debt" class="text-2xl font-black font-mono text-amber-600 dark:text-amber-400 mt-1">₱0.00</p>
+          <span class="text-[10px] text-amber-600/80 dark:text-amber-300/80 font-medium">Total Credit Outstanding</span>
+        </div>
+        <div class="bg-white dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase block">Completed Sales</span>
+          <p id="stat-tx-count" class="text-2xl font-black font-mono text-sky-600 dark:text-sky-400 mt-1">0</p>
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Recorded Audit Logs</span>
+        </div>
+      </div>
+
+      <div class="flex-1 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col shadow-sm">
+        <div class="p-2.5 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+          <h3 class="font-bold text-xs text-slate-800 dark:text-slate-200">Real-Time Transaction Audit Trail</h3>
+          <button onclick="clearAuditLog()" class="text-[11px] text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 font-bold">Clear Audit History</button>
+        </div>
+        <div class="overflow-y-auto flex-1">
+          <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+            <thead class="bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-bold uppercase sticky top-0 border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="p-3">Time & Ref</th>
+                <th class="p-3">Mode</th>
+                <th class="p-3">Customer / Items</th>
+                <th class="p-3">Gross Amount</th>
+                <th class="p-3">Wholesale COGS</th>
+                <th class="p-3 font-bold text-emerald-600 dark:text-emerald-400">Net Profit</th>
+              </tr>
+            </thead>
+            <tbody id="analytics-table-body" class="divide-y divide-slate-200 dark:divide-slate-800">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: Custom Open Item / Loose Sale -->
+  <div id="modal-custom-item" class="fixed inset-0 bg-slate-950/70 z-50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-sm overflow-hidden">
+      <div class="bg-slate-100 dark:bg-slate-950 p-3.5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+        <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-plus-circle text-amber-500"></i> Custom Open Item Sale
+        </h3>
+        <button onclick="closeModal('modal-custom-item')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleAddCustomItem(event)" class="p-4 space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Item Description / Name</label>
+          <input type="text" id="custom-item-name" required placeholder="e.g. Yelo (Ice) / Candy / Plastic Bag" class="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Price Amount (₱)</label>
+          <input type="number" inputmode="decimal" step="0.01" id="custom-item-price" required placeholder="e.g. 15.00" class="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-emerald-600 dark:text-emerald-400 font-mono font-bold text-base focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-custom-item')" class="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-amber-500 text-slate-950 font-black rounded-xl text-xs touch-active shadow">Add to Cart</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Custom Quantity & Amount (Fuel & Agrivet) -->
+  <div id="modal-custom-qty" class="fixed inset-0 bg-slate-950/70 z-50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-md overflow-hidden">
+      <div class="bg-slate-100 dark:bg-slate-950 p-3.5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+        <h3 id="custom-qty-title" class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-calculator text-emerald-600 dark:text-emerald-400"></i> Volume / Weight Calculator
+        </h3>
+        <button onclick="closeModal('modal-custom-qty')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-3 text-xs">
+        <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex justify-between items-center">
+          <div>
+            <p id="custom-prod-name" class="font-bold text-slate-900 dark:text-white text-sm">--</p>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-slate-400 block uppercase font-bold">Standard Unit Price</span>
+            <span id="custom-prod-price-badge" class="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">₱0.00</span>
+          </div>
+        </div>
+
+        <div id="qty-mode-selector-container" class="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+          <button id="qty-mode-btn-qty" onclick="setCustomQtyMode('qty')" class="py-2 rounded-lg font-bold text-xs transition bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950">
+            <i class="fa-solid fa-scale-balanced mr-1"></i> By Weight / Volume
+          </button>
+          <button id="qty-mode-btn-amount" onclick="setCustomQtyMode('amount')" class="py-2 rounded-lg font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+            <i class="fa-solid fa-peso-sign mr-1"></i> By Cash Amount (₱)
+          </button>
+        </div>
+
+        <!-- Field 1: Dynamic Quantity Input -->
+        <div id="field-group-qty" class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label id="label-custom-qty" class="font-bold text-slate-700 dark:text-slate-300 block text-xs">Enter Volume or Weight</label>
+            <div id="unit-switcher-group" class="flex items-center bg-slate-200 dark:bg-slate-950 p-0.5 rounded-lg border border-slate-300 dark:border-slate-800 text-[11px]">
+            </div>
+          </div>
+
+          <div class="relative">
+            <input type="number" inputmode="decimal" step="any" id="input-custom-qty" oninput="calculateCustomQtyPreview()" placeholder="e.g. 1.0" class="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-bold text-lg focus:outline-none focus:border-emerald-500">
+            <span id="unit-custom-qty" class="absolute right-3 top-3 text-slate-400 font-bold text-xs">kg</span>
+          </div>
+        </div>
+
+        <!-- Field 2: Cash Amount Input -->
+        <div id="field-group-amount" class="space-y-2 hidden">
+          <label class="font-bold text-amber-600 dark:text-amber-400 block text-xs">Enter Target Cash Amount (₱)</label>
+          <div class="relative">
+            <span class="absolute left-3 top-2.5 text-slate-400 font-bold text-base">₱</span>
+            <input type="number" inputmode="decimal" step="any" id="input-custom-amount" oninput="calculateCustomQtyPreview()" placeholder="e.g. 100" class="w-full pl-8 pr-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-amber-400 dark:border-amber-500/50 rounded-xl text-amber-700 dark:text-amber-300 font-mono font-bold text-lg focus:outline-none focus:border-amber-500">
+          </div>
+
+          <div class="grid grid-cols-4 gap-1 pt-1">
+            <button type="button" onclick="setPresetAmount(50)" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 text-xs font-bold py-1 rounded border border-slate-300 dark:border-slate-700">₱50</button>
+            <button type="button" onclick="setPresetAmount(100)" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 text-xs font-bold py-1 rounded border border-slate-300 dark:border-slate-700">₱100</button>
+            <button type="button" onclick="setPresetAmount(200)" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 text-xs font-bold py-1 rounded border border-slate-300 dark:border-slate-700">₱200</button>
+            <button type="button" onclick="setPresetAmount(500)" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 text-xs font-bold py-1 rounded border border-slate-300 dark:border-slate-700">₱500</button>
+          </div>
+        </div>
+
+        <!-- Dynamic Summary Preview -->
+        <div class="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-500/30 p-3 rounded-xl space-y-1 font-mono text-xs">
+          <div class="flex justify-between text-slate-600 dark:text-slate-300">
+            <span>Computed Quantity:</span>
+            <strong id="preview-computed-qty" class="text-slate-900 dark:text-white">0.00</strong>
+          </div>
+          <div class="flex justify-between text-base font-black text-emerald-600 dark:text-emerald-400 pt-1 border-t border-emerald-200 dark:border-emerald-500/20">
+            <span>TOTAL PRICE:</span>
+            <span id="preview-computed-total">₱0.00</span>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-custom-qty')" class="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs">Cancel</button>
+          <button type="button" onclick="confirmAddCustomQtyToCart()" class="px-5 py-2 bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950 font-black rounded-xl text-xs touch-active shadow">Add to Basket</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Data Backup & Restore -->
+  <div id="modal-backup" class="fixed inset-0 bg-slate-950/70 z-50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-md overflow-hidden">
+      <div class="bg-slate-100 dark:bg-slate-950 p-3.5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+        <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-database text-emerald-600 dark:text-emerald-400"></i> Backup & Restore Store Data
+        </h3>
+        <button onclick="closeModal('modal-backup')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-4 text-xs">
+        <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+          <h4 class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 text-xs">
+            <i class="fa-solid fa-download text-emerald-600 dark:text-emerald-400"></i> Export JSON Backup
+          </h4>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Save all product inventory, customer utang records, and sales history to a backup file.</p>
+          <button onclick="exportSystemBackup()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white dark:bg-emerald-500 dark:text-slate-950 font-bold rounded-lg shadow touch-active flex items-center justify-center gap-2">
+            <i class="fa-solid fa-file-arrow-down"></i> Download Data Backup (.json)
+          </button>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+          <h4 class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 text-xs">
+            <i class="fa-solid fa-upload text-sky-600 dark:text-sky-400"></i> Restore System Data
+          </h4>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Import a previously saved `.json` backup file to restore store records.</p>
+          <input type="file" id="backup-file-input" accept=".json" onchange="importSystemBackup(event)" class="hidden">
+          <button onclick="document.getElementById('backup-file-input').click()" class="w-full py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg shadow touch-active flex items-center justify-center gap-2">
+            <i class="fa-solid fa-file-arrow-up"></i> Select Backup File to Restore
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Itemized Debt History (Ano-ano nakuha?) -->
+  <div id="modal-debt-history" class="fixed inset-0 bg-slate-950/70 z-50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]">
+      <div class="bg-slate-100 dark:bg-slate-950 p-3.5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center shrink-0">
+        <div>
+          <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-receipt text-amber-500"></i> Itemized Credit History
+          </h3>
+          <p id="history-cust-name" class="text-xs text-slate-500 dark:text-slate-400">Customer: --</p>
+        </div>
+        <button onclick="closeModal('modal-debt-history')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div id="debt-history-container" class="p-4 overflow-y-auto flex-1 space-y-3 text-xs">
+        <!-- Dynamic list of credit transactions & itemized products -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Receipt Printing / Summary -->
+  <div id="modal-receipt" class="fixed inset-0 bg-slate-950/70 z-50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
+      <div class="bg-emerald-600 dark:bg-emerald-500 text-white dark:text-slate-950 p-4 text-center">
+        <i class="fa-solid fa-circle-check text-4xl mb-1"></i>
+        <h3 class="font-black text-lg uppercase tracking-wide">Transaction Complete!</h3>
+        <p class="text-xs font-bold opacity-90" id="receipt-tx-ref">Ref: TX-000000</p>
+      </div>
+      
+      <div class="p-4 space-y-3 text-xs">
+        <div id="receipt-items-list" class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1 font-mono text-[11px] max-h-40 overflow-y-auto">
+          <!-- Itemized list -->
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5 font-mono">
+          <div class="flex justify-between text-slate-500 dark:text-slate-400">
+            <span>Payment Mode:</span>
+            <span id="receipt-mode" class="font-bold text-slate-900 dark:text-white uppercase">CASH</span>
+          </div>
+          <div class="flex justify-between text-slate-500 dark:text-slate-400">
+            <span>Grand Total:</span>
+            <span id="receipt-grandtotal" class="font-bold text-slate-900 dark:text-white">₱0.00</span>
+          </div>
+          <div id="receipt-cash-row" class="flex justify-between text-slate-500 dark:text-slate-400">
+            <span>Cash Tendered:</span>
+            <span id="receipt-tendered" class="font-bold text-slate-900 dark:text-white">₱0.00</span>
+          </div>
+          <div id="receipt-sukli-row" class="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold text-sm pt-1 border-t border-slate-200 dark:border-slate-800">
+            <span>SUKLI (CHANGE):</span>
+            <span id="receipt-sukli" class="text-lg">₱0.00</span>
+          </div>
+        </div>
+
+        <button onclick="closeModal('modal-receipt')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white dark:bg-emerald-500 dark:text-slate-950 font-black py-3 rounded-xl text-sm touch-active shadow">
+          START NEXT TRANSACTION
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add New Product -->
+  <div id="modal-add-product" class="fixed inset-0 bg-slate-950/70 z-50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-md overflow-hidden">
+      <div class="bg-slate-100 dark:bg-slate-950 p-3.5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+        <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-box-open text-emerald-600 dark:text-emerald-400"></i> Add New Product to Catalog
+        </h3>
+        <button onclick="closeModal('modal-add-product')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="form-add-product" onsubmit="handleSaveProduct(event)" class="p-4 space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Product Name</label>
+          <input type="text" id="prod-name" required placeholder="e.g. Unleaded Fuel / Pig Starter Feed / Lucky Me" class="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs">
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Category</label>
+          <select id="prod-category" onchange="toggleProductFormFields()" class="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs">
+            <option value="Grocery">Grocery / Tingi</option>
+            <option value="Fuel">Gasoline / Fuel</option>
+            <option value="Agrivet">Feeds & Agrivet</option>
+            <option value="Meds">Vitamins & Meds</option>
+          </select>
+        </div>
+
+        <!-- Fuel Wholesale Breakdown -->
+        <div id="fuel-config-fields" class="hidden bg-rose-50 dark:bg-rose-950/30 p-3 rounded-xl border border-rose-200 dark:border-rose-500/30 space-y-2">
+          <span class="font-bold text-rose-700 dark:text-rose-400 block text-[11px]"><i class="fa-solid fa-gas-pump mr-1"></i> Fuel Container Purchasing Config</span>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] text-slate-600 dark:text-slate-300 block">1 Container Cost (₱)</label>
+              <input type="number" inputmode="decimal" step="0.01" id="fuel-container-cost" oninput="calculateFuelDerivedCost()" placeholder="e.g. 1300" class="w-full p-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-bold text-xs">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-600 dark:text-slate-300 block">Container Liters (L)</label>
+              <input type="number" inputmode="decimal" step="0.1" id="fuel-container-liters" oninput="calculateFuelDerivedCost()" placeholder="e.g. 20" class="w-full p-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-bold text-xs">
+            </div>
+          </div>
+          <div class="bg-white dark:bg-slate-950 p-2 rounded-lg text-[10px] text-slate-600 dark:text-slate-300 flex justify-between font-mono">
+            <span>Derived Wholesale Cost / Liter:</span>
+            <strong id="fuel-derived-cost-text" class="text-emerald-600 dark:text-emerald-400">₱0.00 / L</strong>
+          </div>
+        </div>
+
+        <!-- Agrivet Sack Conversion -->
+        <div id="agrivet-repack-fields" class="hidden bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-xl border border-emerald-200 dark:border-emerald-500/30 space-y-2">
+          <span class="font-bold text-emerald-700 dark:text-emerald-400 block text-[11px]"><i class="fa-solid fa-wheat-awn mr-1"></i> Feeds Sack-to-Kg Config</span>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] text-slate-600 dark:text-slate-300 block">Sack Purchase Cost (₱)</label>
+              <input type="number" inputmode="decimal" step="0.01" id="prod-sack-cost" oninput="calculateAgrivetDerivedCost()" placeholder="e.g. 1400" class="w-full p-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-bold text-xs">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-600 dark:text-slate-300 block">Sack Weight (kg)</label>
+              <input type="number" inputmode="decimal" step="0.1" id="prod-conversion-ratio" value="50" oninput="calculateAgrivetDerivedCost()" class="w-full p-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-bold text-xs">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] text-slate-600 dark:text-slate-300 block">Sack Selling Price (₱)</label>
+              <input type="number" inputmode="decimal" step="0.01" id="prod-sack-price" placeholder="e.g. 1650" class="w-full p-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-bold text-xs">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-600 dark:text-slate-300 block">Retail Price / kg (₱)</label>
+              <input type="number" inputmode="decimal" step="0.01" id="prod-price-retail" placeholder="e.g. 38.00" class="w-full p-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-bold text-xs">
+            </div>
+          </div>
+        </div>
+
+        <div id="standard-pricing-fields" class="grid grid-cols-3 gap-2">
+          <div>
+            <label id="label-prod-stock" class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Initial Stock</label>
+            <input type="number" inputmode="decimal" step="any" id="prod-stock" placeholder="10" class="w-full p-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs font-bold">
+          </div>
+          <div>
+            <label id="label-prod-cost" class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Cost Price (₱)</label>
+            <input type="number" inputmode="decimal" step="0.01" id="prod-cost" placeholder="80.00" class="w-full p-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs font-bold">
+          </div>
+          <div>
+            <label id="label-prod-price" class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Selling Price (₱)</label>
+            <input type="number" inputmode="decimal" step="0.01" id="prod-price" placeholder="100.00" class="w-full p-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs font-bold">
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 pt-1">
+          <input type="checkbox" id="prod-is-pinned" class="w-4 h-4 text-emerald-600 rounded border-slate-300">
+          <label for="prod-is-pinned" class="text-xs font-bold text-slate-700 dark:text-slate-300">Pin as Top Fast-Seller on POS bar</label>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-add-product')" class="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950 font-black rounded-xl text-xs touch-active shadow">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Add Debtor Customer -->
+  <div id="modal-add-customer" class="fixed inset-0 bg-slate-950/70 z-50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-sm overflow-hidden">
+      <div class="bg-slate-100 dark:bg-slate-950 p-3.5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+        <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-amber-500"></i> Add Debtor Profile
+        </h3>
+        <button onclick="closeModal('modal-add-customer')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleSaveCustomer(event)" class="p-4 space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Customer Name / Alias</label>
+          <input type="text" id="cust-name" required placeholder="e.g. Mang Pedro Santos / Kapitan Rey" class="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs">
+        </div>
+        <div>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Phone Number</label>
+          <input type="text" inputmode="tel" id="cust-phone" placeholder="0917XXXXXXX" class="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs">
+        </div>
+        <div>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Credit Line Limit (₱)</label>
+          <input type="number" inputmode="decimal" id="cust-limit" value="3000" class="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold text-xs">
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-add-customer')" class="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-amber-500 text-slate-950 font-black rounded-xl text-xs touch-active shadow">Save Debtor</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Record Debt Payment (Cash or GCash) -->
+  <div id="modal-pay-utang" class="fixed inset-0 bg-slate-950/70 z-50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-sm overflow-hidden">
+      <div class="bg-slate-100 dark:bg-slate-950 p-3.5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+        <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-money-bill-transfer text-emerald-600 dark:text-emerald-400"></i> Record Debt Payment
+        </h3>
+        <button onclick="closeModal('modal-pay-utang')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handlePayDebt(event)" class="p-4 space-y-3 text-xs">
+        <input type="hidden" id="pay-cust-id">
+        <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1">
+          <p class="text-slate-500 dark:text-slate-400">Customer: <strong id="pay-cust-name" class="text-slate-900 dark:text-white font-bold">--</strong></p>
+          <p class="text-slate-500 dark:text-slate-400">Current Debt: <strong id="pay-cust-debt" class="text-rose-600 dark:text-rose-400 font-mono font-bold">₱0.00</strong></p>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Payment Method Channel</label>
+          <select id="pay-channel" class="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs font-bold">
+            <option value="Cash">Cash Payment</option>
+            <option value="GCash">GCash Transfer</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Amount Paid (₱)</label>
+          <input type="number" inputmode="decimal" step="0.01" id="pay-amount" required placeholder="Enter payment amount" class="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-emerald-600 dark:text-emerald-400 font-mono font-bold text-base focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Ref Number / Note (Optional)</label>
+          <input type="text" id="pay-ref-note" placeholder="e.g. GCash Ref #123456" class="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs">
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-pay-utang')" class="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950 font-black rounded-xl text-xs touch-active shadow">Record Payment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- APPLICATION JAVASCRIPT ENGINE -->
+  <script>
+    // Audio Sound Synthesizer
+    const AudioEngine = {
+      ctx: null,
+      init() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      },
+      beep(freq = 800, duration = 0.08, type = 'sine') {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch (e) {}
+      },
+      add() { this.beep(1200, 0.06); },
+      checkout() {
+        this.beep(800, 0.08);
+        setTimeout(() => this.beep(1400, 0.15), 90);
+      }
+    };
+
+    const DEFAULT_PRODUCTS = [
+      { id: 'prod_1', name: 'Unleaded Gasoline', category: 'Fuel', stockLiters: 120.0, containerCost: 1300, containerLiters: 20, costPerLiter: 65.00, pricePerLiter: 85.00, isFuel: true, isPinned: true },
+      { id: 'prod_2', name: 'Diesel Fuel', category: 'Fuel', stockLiters: 200.0, containerCost: 1200, containerLiters: 20, costPerLiter: 60.00, pricePerLiter: 78.00, isFuel: true, isPinned: false },
+      { id: 'prod_3', name: 'Pig Starter Feeds', category: 'Agrivet', stockKg: 250.0, sackCost: 1400, sackWeight: 50, costPerKg: 28.00, sackPrice: 1650, pricePerKg: 38.00, isAgrivet: true, isPinned: false },
+      { id: 'prod_4', name: 'Sinandomeng Rice 1kg', category: 'Agrivet', stockKg: 400.0, sackCost: 2200, sackWeight: 50, costPerKg: 44.00, sackPrice: 2600, pricePerKg: 56.00, isAgrivet: true, isPinned: true },
+      { id: 'prod_5', name: 'Coffee Sachet Twin Pack', category: 'Grocery', stock: 150, cost: 11, price: 14, isPinned: true },
+      { id: 'prod_6', name: 'Canned Sardines Ligo 155g', category: 'Grocery', stock: 45, cost: 19, price: 24, isPinned: true },
+      { id: 'prod_7', name: 'Instant Noodles Lucky Me', category: 'Grocery', stock: 80, cost: 11, price: 15, isPinned: true },
+      { id: 'prod_8', name: 'Soft Drink 1.5L Coke', category: 'Grocery', stock: 18, cost: 62, price: 75, isPinned: true },
+      { id: 'prod_9', name: 'Cooking Oil 1L Bottle', category: 'Grocery', stock: 8, cost: 68, price: 85, isPinned: false },
+      { id: 'prod_10', name: 'Poultry Dewormer 10ml', category: 'Meds', stock: 25, cost: 25, price: 40, isPinned: false }
+    ];
+
+    const STATE = {
+      theme: localStorage.getItem('pos_theme') || 'light',
+      products: JSON.parse(localStorage.getItem('pos_products')) || DEFAULT_PRODUCTS,
+      customers: JSON.parse(localStorage.getItem('pos_customers')) || [
+        { id: 'cust_1', name: 'Mang Pedro Santos', phone: '09171234567', debt: 450, limit: 3000 },
+        { id: 'cust_2', name: 'Aling Nena Lopez', phone: '09189876543', debt: 120, limit: 2000 },
+        { id: 'cust_3', name: 'Kapitan Rey', phone: '09201112233', debt: 2850, limit: 3000 }
+      ],
+      transactions: JSON.parse(localStorage.getItem('pos_transactions')) || [],
+      debtPayments: JSON.parse(localStorage.getItem('pos_debt_payments')) || [],
+      cart: [],
+      activeCategory: 'all',
+      paymentMethod: 'cash',
+      activeModalProduct: null,
+      customQtyMode: 'qty',
+      activeUnitMode: 'large'
+    };
+
+    function saveState() {
+      localStorage.setItem('pos_products', JSON.stringify(STATE.products));
+      localStorage.setItem('pos_customers', JSON.stringify(STATE.customers));
+      localStorage.setItem('pos_transactions', JSON.stringify(STATE.transactions));
+      localStorage.setItem('pos_debt_payments', JSON.stringify(STATE.debtPayments));
+    }
+
+    // Light/Dark Theme Engine
+    function initTheme() {
+      if (STATE.theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('theme-text-mode').innerText = 'Dark Mode';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('theme-text-mode').innerText = 'Light Mode';
+      }
+    }
+
+    function toggleDarkMode() {
+      STATE.theme = STATE.theme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('pos_theme', STATE.theme);
+      initTheme();
+      AudioEngine.beep(900, 0.05);
+    }
+
+    function resetDataToDefaults() {
+      if (confirm("Reset store inventory data back to factory defaults?")) {
+        STATE.products = [...DEFAULT_PRODUCTS];
+        saveState();
+        renderPOSGrid();
+        renderInventory();
+      }
+    }
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('live-clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    setInterval(updateClock, 1000);
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.className = "tab-btn px-4 py-2 rounded-lg transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
+      });
+
+      document.getElementById(`view-${tabName}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-${tabName}`);
+      activeBtn.className = "tab-btn px-4 py-2 rounded-lg transition flex items-center gap-2 bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950 shadow-sm";
+
+      if (tabName === 'pos') renderPOSGrid();
+      if (tabName === 'inventory') renderInventory();
+      if (tabName === 'utang') renderUtang();
+      if (tabName === 'analytics') renderAnalytics();
+    }
+
+    function setCategoryFilter(cat) {
+      STATE.activeCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        btn.className = "cat-pill px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-white text-slate-700 dark:bg-slate-950 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[38px]";
+      });
+      event.currentTarget.className = "cat-pill active-pill px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950 border border-emerald-500 min-h-[38px] shadow-sm";
+      renderPOSGrid();
+    }
+
+    function clearSearch() {
+      document.getElementById('pos-search').value = '';
+      document.getElementById('clear-search-btn').classList.add('hidden');
+      renderPOSGrid();
+    }
+
+    function renderPOSGrid() {
+      renderPinnedBar();
+      const grid = document.getElementById('pos-grid');
+      if (!grid) return;
+      const query = document.getElementById('pos-search').value.toLowerCase().trim();
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (query.length > 0) clearBtn.classList.remove('hidden'); else clearBtn.classList.add('hidden');
+
+      const filtered = STATE.products.filter(p => {
+        const matchesCat = STATE.activeCategory === 'all' || 
+                           (STATE.activeCategory === 'pinned' && p.isPinned) ||
+                           p.category === STATE.activeCategory;
+        const matchesSearch = (p.name || '').toLowerCase().includes(query);
+        return matchesCat && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center text-slate-400 py-12 font-medium text-xs">No items found matching filter.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => {
+        let stockVal = 0;
+        let stockDisplay = '';
+        let priceDisplay = '';
+        let isLowStock = false;
+
+        if (p.isFuel) {
+          stockVal = p.stockLiters !== undefined ? p.stockLiters : (p.stock || 0);
+          const price = p.pricePerLiter !== undefined ? p.pricePerLiter : (p.price || 0);
+          stockDisplay = `${Number(stockVal).toFixed(1)} L stock`;
+          priceDisplay = `₱${Number(price).toFixed(2)}/L`;
+          if (stockVal <= 15) isLowStock = true;
+        } else if (p.isAgrivet) {
+          const sWeight = p.sackWeight || 50;
+          stockVal = p.stockKg !== undefined ? p.stockKg : ((p.stock || 0) * sWeight);
+          const priceKg = p.pricePerKg !== undefined ? p.pricePerKg : (p.price || 0);
+          const sacks = Math.floor(stockVal / sWeight);
+          stockDisplay = `${sacks} Sacks (${stockVal.toFixed(0)}kg)`;
+          priceDisplay = `₱${Number(priceKg).toFixed(2)}/kg`;
+          if (stockVal <= 50) isLowStock = true;
+        } else {
+          stockVal = p.stock !== undefined ? p.stock : 0;
+          const price = p.price !== undefined ? p.price : 0;
+          stockDisplay = `${stockVal} pcs stock`;
+          priceDisplay = `₱${Number(price).toFixed(2)}`;
+          if (stockVal <= 10) isLowStock = true;
+        }
+
+        return `
+          <div onclick="handleProductTileClick('${p.id}')" 
+               class="touch-active bg-white dark:bg-slate-950 p-3 rounded-2xl border ${isLowStock ? 'border-rose-400 dark:border-rose-500/60' : 'border-slate-200 dark:border-slate-800'} hover:border-emerald-500 cursor-pointer transition select-none flex flex-col justify-between min-h-[120px] shadow-sm group relative">
+            <div>
+              <div class="flex justify-between items-start gap-1">
+                <span class="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">${p.category || 'Item'}</span>
+                ${isLowStock ? `<span class="text-[9px] bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 font-extrabold px-1.5 py-0.5 rounded border border-rose-300 dark:border-rose-800 animate-pulse">LOW STOCK</span>` : ''}
+              </div>
+              <h3 class="font-bold text-xs text-slate-900 dark:text-white mt-1.5 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 leading-tight line-clamp-2">${p.name}</h3>
+            </div>
+
+            <div class="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-900 flex items-end justify-between">
+              <div>
+                <span class="text-[10px] text-slate-400 block">${stockDisplay}</span>
+                <span class="font-mono font-black text-sm text-emerald-600 dark:text-emerald-400">${priceDisplay}</span>
+              </div>
+              <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-slate-900 dark:text-emerald-400 flex items-center justify-center font-bold text-xs group-hover:bg-emerald-600 group-hover:text-white transition">
+                <i class="fa-solid fa-plus"></i>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderPinnedBar() {
+      const container = document.getElementById('pos-pinned-bar');
+      if (!container) return;
+
+      const pinned = STATE.products.filter(p => p.isPinned);
+
+      if (pinned.length === 0) {
+        container.innerHTML = `<span class="text-xs text-slate-400 italic">No pinned items. Pin items in Inventory view!</span>`;
+        return;
+      }
+
+      container.innerHTML = pinned.map(p => {
+        const price = p.isFuel ? (p.pricePerLiter || p.price) : (p.isAgrivet ? (p.pricePerKg || p.price) : p.price);
+        return `
+          <button onclick="handleProductTileClick('${p.id}')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 font-bold text-xs shrink-0 flex items-center gap-2 touch-active">
+            <span class="text-slate-900 dark:text-white">${p.name}</span>
+            <span class="font-mono text-emerald-600 dark:text-emerald-400 font-black">₱${Number(price).toFixed(0)}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function handleProductTileClick(productId) {
+      const prod = STATE.products.find(p => p.id === productId);
+      if (!prod) return;
+
+      if (prod.isFuel || prod.isAgrivet) {
+        openCustomQtyModal(prod);
+      } else {
+        addStandardItemToCart(prod);
+      }
+    }
+
+    function openCustomQtyModal(product) {
+      STATE.activeModalProduct = product;
+      document.getElementById('custom-prod-name').innerText = product.name;
+      
+      const unitSwitcher = document.getElementById('unit-switcher-group');
+      const modeSelector = document.getElementById('qty-mode-selector-container');
+
+      if (product.isFuel) {
+        const priceL = product.pricePerLiter !== undefined ? product.pricePerLiter : (product.price || 0);
+        document.getElementById('custom-prod-price-badge').innerText = `₱${priceL.toFixed(2)} / L`;
+        document.getElementById('label-custom-qty').innerText = "Enter Fuel Volume";
+        document.getElementById('input-custom-qty').value = "1.0";
+        if (modeSelector) modeSelector.classList.add('hidden');
+
+        unitSwitcher.innerHTML = `
+          <button type="button" id="unit-btn-small" onclick="setUnitMode('small')" class="px-2 py-0.5 rounded font-bold text-slate-400">mL</button>
+          <button type="button" id="unit-btn-large" onclick="setUnitMode('large')" class="px-2 py-0.5 rounded font-bold bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950">Liters</button>
+        `;
+        setUnitMode('large');
+      } else if (product.isAgrivet) {
+        const priceKg = product.pricePerKg !== undefined ? product.pricePerKg : (product.price || 0);
+        document.getElementById('custom-prod-price-badge').innerText = `₱${priceKg.toFixed(2)} / kg`;
+        document.getElementById('label-custom-qty').innerText = "Enter Weight in Kilograms (kg)";
+        document.getElementById('input-custom-qty').value = "1.0";
+        if (modeSelector) modeSelector.classList.remove('hidden');
+
+        unitSwitcher.innerHTML = `
+          <button type="button" id="unit-btn-small" onclick="setUnitMode('small')" class="px-2 py-0.5 rounded font-bold text-slate-400">Grams</button>
+          <button type="button" id="unit-btn-large" onclick="setUnitMode('large')" class="px-2 py-0.5 rounded font-bold bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950">kg</button>
+        `;
+        setUnitMode('large');
+      }
+
+      setCustomQtyMode('qty');
+      openModal('modal-custom-qty');
+    }
+
+    function setCustomQtyMode(mode) {
+      STATE.customQtyMode = mode;
+      const btnQty = document.getElementById('qty-mode-btn-qty');
+      const btnAmount = document.getElementById('qty-mode-btn-amount');
+      const groupQty = document.getElementById('field-group-qty');
+      const groupAmount = document.getElementById('field-group-amount');
+
+      if (mode === 'qty') {
+        btnQty.className = "py-2 rounded-lg font-bold text-xs transition bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950";
+        btnAmount.className = "py-2 rounded-lg font-bold text-xs transition text-slate-500 dark:text-slate-400 hover:text-white";
+        groupQty.classList.remove('hidden');
+        groupAmount.classList.add('hidden');
+      } else {
+        btnAmount.className = "py-2 rounded-lg font-bold text-xs transition bg-amber-500 text-slate-950";
+        btnQty.className = "py-2 rounded-lg font-bold text-xs transition text-slate-500 dark:text-slate-400 hover:text-white";
+        groupAmount.classList.remove('hidden');
+        groupQty.classList.add('hidden');
+      }
+      calculateCustomQtyPreview();
+    }
+
+    function setPresetAmount(amount) {
+      document.getElementById('input-custom-amount').value = amount;
+      calculateCustomQtyPreview();
+    }
+
+    function setUnitMode(mode) {
+      STATE.activeUnitMode = mode;
+      const p = STATE.activeModalProduct;
+      const btnSmall = document.getElementById('unit-btn-small');
+      const btnLarge = document.getElementById('unit-btn-large');
+      const labelSpan = document.getElementById('unit-custom-qty');
+
+      const smallLabel = (p && p.isFuel) ? 'mL' : 'g';
+      const largeLabel = (p && p.isFuel) ? 'Liters' : 'kg';
+
+      if (mode === 'small') {
+        if (btnSmall) btnSmall.className = "px-2 py-0.5 rounded font-bold bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950";
+        if (btnLarge) btnLarge.className = "px-2 py-0.5 rounded font-bold text-slate-400";
+        if (labelSpan) labelSpan.innerText = smallLabel;
+      } else {
+        if (btnLarge) btnLarge.className = "px-2 py-0.5 rounded font-bold bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950";
+        if (btnSmall) btnSmall.className = "px-2 py-0.5 rounded font-bold text-slate-400";
+        if (labelSpan) labelSpan.innerText = largeLabel;
+      }
+      calculateCustomQtyPreview();
+    }
+
+    function calculateCustomQtyPreview() {
+      const p = STATE.activeModalProduct;
+      if (!p) return;
+
+      let baseQty = 0;
+      let totalPrice = 0;
+
+      const unitPrice = p.isFuel 
+        ? (p.pricePerLiter || p.price || 0)
+        : (p.pricePerKg || p.price || 0);
+
+      if (STATE.customQtyMode === 'qty') {
+        const enteredVal = parseFloat(document.getElementById('input-custom-qty').value) || 0;
+        baseQty = (STATE.activeUnitMode === 'small') ? (enteredVal / 1000) : enteredVal;
+        totalPrice = baseQty * unitPrice;
+      } else {
+        totalPrice = parseFloat(document.getElementById('input-custom-amount').value) || 0;
+        baseQty = unitPrice > 0 ? (totalPrice / unitPrice) : 0;
+      }
+
+      let displayQty = '';
+      if (p.isFuel) {
+        displayQty = (STATE.activeUnitMode === 'small' && STATE.customQtyMode === 'qty')
+          ? `${(baseQty * 1000).toFixed(0)} mL (${baseQty.toFixed(3)} L)`
+          : `${baseQty.toFixed(3)} L`;
+      } else {
+        displayQty = (STATE.activeUnitMode === 'small' && STATE.customQtyMode === 'qty')
+          ? `${(baseQty * 1000).toFixed(0)} g (${baseQty.toFixed(3)} kg)`
+          : `${baseQty.toFixed(3)} kg`;
+      }
+
+      document.getElementById('preview-computed-qty').innerText = displayQty;
+      document.getElementById('preview-computed-total').innerText = `₱${totalPrice.toFixed(2)}`;
+    }
+
+    function confirmAddCustomQtyToCart() {
+      const p = STATE.activeModalProduct;
+      if (!p) return;
+
+      let baseQty = 0;
+      let totalPrice = 0;
+
+      const unitPrice = p.isFuel 
+        ? (p.pricePerLiter || p.price || 0)
+        : (p.pricePerKg || p.price || 0);
+
+      const unitCost = p.isFuel 
+        ? (p.costPerLiter || p.cost || 0) 
+        : (p.costPerKg || p.cost || 0);
+
+      if (STATE.customQtyMode === 'qty') {
+        const enteredVal = parseFloat(document.getElementById('input-custom-qty').value) || 0;
+        baseQty = (STATE.activeUnitMode === 'small') ? (enteredVal / 1000) : enteredVal;
+        totalPrice = baseQty * unitPrice;
+      } else {
+        totalPrice = parseFloat(document.getElementById('input-custom-amount').value) || 0;
+        baseQty = unitPrice > 0 ? (totalPrice / unitPrice) : 0;
+      }
+
+      if (baseQty <= 0) {
+        alert("Please enter a valid weight, volume, or cash amount.");
+        return;
+      }
+
+      let labelQty = '';
+      if (p.isFuel) {
+        labelQty = (baseQty < 1) ? `${(baseQty * 1000).toFixed(0)}mL` : `${baseQty.toFixed(2)}L`;
+      } else {
+        labelQty = (baseQty < 1) ? `${(baseQty * 1000).toFixed(0)}g` : `${baseQty.toFixed(2)}kg`;
+      }
+
+      STATE.cart.push({
+        productId: p.id,
+        name: `${p.name} (${labelQty})`,
+        rawQty: baseQty,
+        unitLabel: p.isFuel ? 'L' : (p.isAgrivet ? 'kg' : 'pcs'),
+        unitCost: unitCost,
+        unitPrice: unitPrice,
+        totalAmount: totalPrice,
+        isFuel: p.isFuel || false,
+        isAgrivet: p.isAgrivet || false
+      });
+
+      AudioEngine.add();
+      closeModal('modal-custom-qty');
+      renderCart();
+    }
+
+    function handleAddCustomItem(e) {
+      e.preventDefault();
+      const name = document.getElementById('custom-item-name').value;
+      const price = parseFloat(document.getElementById('custom-item-price').value) || 0;
+
+      if (price <= 0) {
+        alert("Please enter a valid price amount.");
+        return;
+      }
+
+      STATE.cart.push({
+        productId: 'custom_' + Date.now(),
+        name: `Custom: ${name}`,
+        rawQty: 1,
+        unitLabel: 'pcs',
+        unitCost: price * 0.8, // estimated COGS 80%
+        unitPrice: price,
+        totalAmount: price,
+        isCustom: true
+      });
+
+      AudioEngine.add();
+      closeModal('modal-custom-item');
+      document.getElementById('custom-item-name').value = '';
+      document.getElementById('custom-item-price').value = '';
+      renderCart();
+    }
+
+    function addStandardItemToCart(p) {
+      const existing = STATE.cart.find(i => i.productId === p.id);
+      const price = p.price !== undefined ? p.price : 0;
+      const cost = p.cost !== undefined ? p.cost : 0;
+
+      if (existing) {
+        existing.rawQty += 1;
+        existing.totalAmount = existing.rawQty * existing.unitPrice;
+      } else {
+        STATE.cart.push({
+          productId: p.id,
+          name: p.name || 'Unnamed',
+          rawQty: 1,
+          unitLabel: 'pcs',
+          unitCost: cost,
+          unitPrice: price,
+          totalAmount: price,
+          isFuel: false,
+          isAgrivet: false
+        });
+      }
+      AudioEngine.add();
+      renderCart();
+    }
+
+    function updateCartQty(index, delta) {
+      const item = STATE.cart[index];
+      item.rawQty += delta;
+      if (item.rawQty <= 0) {
+        STATE.cart.splice(index, 1);
+      } else {
+        item.totalAmount = item.rawQty * item.unitPrice;
+      }
+      AudioEngine.beep(700, 0.05);
+      renderCart();
+    }
+
+    function clearCart() {
+      STATE.cart = [];
+      renderCart();
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items-container');
+      const countBadge = document.getElementById('cart-item-count');
+
+      countBadge.innerText = `${STATE.cart.length} items`;
+
+      if (STATE.cart.length === 0) {
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-slate-400 py-8 text-center">
+            <i class="fa-solid fa-cart-flatbed text-3xl mb-1 text-slate-300 dark:text-slate-700"></i>
+            <p class="text-xs font-bold">Cart is empty.</p>
+            <p class="text-[10px] text-slate-400">Tap product tiles on left to add items.</p>
+          </div>
+        `;
+        document.getElementById('cart-subtotal').innerText = '₱0.00';
+        document.getElementById('cart-grandtotal').innerText = '₱0.00';
+        calculateSukli();
+        return;
+      }
+
+      let subtotal = 0;
+
+      container.innerHTML = STATE.cart.map((item, idx) => {
+        subtotal += item.totalAmount;
+
+        return `
+          <div class="p-2 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
+            <div class="flex justify-between items-start gap-1">
+              <span class="font-bold text-slate-900 dark:text-white text-xs leading-tight">${item.name}</span>
+              <button onclick="updateCartQty(${idx}, -${item.rawQty})" class="text-slate-400 hover:text-rose-500 p-0.5 touch-active">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between pt-0.5">
+              <div class="flex items-center bg-white dark:bg-slate-950 rounded-lg border border-slate-300 dark:border-slate-800">
+                <button onclick="updateCartQty(${idx}, -1)" class="w-7 h-7 flex items-center justify-center font-bold text-rose-500 hover:bg-slate-100 rounded-l-lg touch-active text-xs">-</button>
+                <span class="w-14 text-center font-mono font-bold text-slate-900 dark:text-white text-xs">${item.rawQty.toFixed(2)} ${item.unitLabel}</span>
+                <button onclick="updateCartQty(${idx}, 1)" class="w-7 h-7 flex items-center justify-center font-bold text-emerald-600 hover:bg-slate-100 rounded-r-lg touch-active text-xs">+</button>
+              </div>
+
+              <span class="font-mono font-black text-sm text-slate-900 dark:text-white">₱${item.totalAmount.toFixed(2)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('cart-subtotal').innerText = `₱${subtotal.toFixed(2)}`;
+      document.getElementById('cart-grandtotal').innerText = `₱${subtotal.toFixed(2)}`;
+
+      const select = document.getElementById('utang-customer-select');
+      select.innerHTML = `<option value="NEW_CUSTOM">+ Type Custom / New Name...</option>` +
+        STATE.customers.map(c => `<option value="${c.id}">${c.name} (Debt: ₱${c.debt.toFixed(2)})</option>`).join('');
+      updateUtangCustomerPreview();
+      calculateSukli();
+    }
+
+    function toggleTouchNumpad() {
+      const pad = document.getElementById('touch-numpad');
+      const txt = document.getElementById('numpad-toggle-text');
+      if (pad.classList.contains('hidden')) {
+        pad.classList.remove('hidden');
+        txt.innerText = 'Hide Numpad';
+      } else {
+        pad.classList.add('hidden');
+        txt.innerText = 'Show Numpad';
+      }
+    }
+
+    function pressNumpad(val) {
+      const input = document.getElementById('cash-tendered-input');
+      let cur = input.value;
+      if (val === 'C') {
+        input.value = '';
+      } else if (val === 'back') {
+        input.value = cur.slice(0, -1);
+      } else {
+        input.value = cur + val;
+      }
+      calculateSukli();
+      AudioEngine.beep(1000, 0.03);
+    }
+
+    function setPaymentMethod(method) {
+      STATE.paymentMethod = method;
+      const cashBtn = document.getElementById('pay-btn-cash');
+      const utangBtn = document.getElementById('pay-btn-utang');
+      const cashDesk = document.getElementById('cash-payment-desk');
+      const utangDesk = document.getElementById('utang-payment-desk');
+
+      if (method === 'cash') {
+        cashBtn.className = 'pay-method-btn px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 border-2 border-emerald-600 bg-emerald-50 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 touch-active';
+        utangBtn.className = 'pay-method-btn px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 border-2 border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800 text-slate-600 dark:text-slate-400 touch-active';
+        cashDesk.classList.remove('hidden');
+        utangDesk.classList.add('hidden');
+      } else {
+        utangBtn.className = 'pay-method-btn px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 border-2 border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 touch-active';
+        cashBtn.className = 'pay-method-btn px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 border-2 border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800 text-slate-600 dark:text-slate-400 touch-active';
+        utangDesk.classList.remove('hidden');
+        cashDesk.classList.add('hidden');
+      }
+      AudioEngine.beep(1100, 0.05);
+    }
+
+    function addPresetTender(amount) {
+      const input = document.getElementById('cash-tendered-input');
+      const current = parseFloat(input.value) || 0;
+      input.value = (current + amount).toFixed(0);
+      calculateSukli();
+      AudioEngine.beep(1000, 0.04);
+    }
+
+    function setTenderExact() {
+      const grandTotal = STATE.cart.reduce((acc, i) => acc + i.totalAmount, 0);
+      document.getElementById('cash-tendered-input').value = grandTotal.toFixed(2);
+      calculateSukli();
+      AudioEngine.beep(1200, 0.04);
+    }
+
+    function calculateSukli() {
+      const inputVal = parseFloat(document.getElementById('cash-tendered-input').value) || 0;
+      const grandTotal = STATE.cart.reduce((acc, i) => acc + i.totalAmount, 0);
+      const sukli = inputVal - grandTotal;
+      const sukliBox = document.getElementById('sukli-display-box');
+      const sukliText = document.getElementById('sukli-amount');
+
+      if (sukli >= 0) {
+        sukliBox.className = "bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/40 p-2 rounded-lg flex items-center justify-between";
+        sukliText.innerText = `₱${sukli.toFixed(2)}`;
+        sukliText.className = "text-xl font-mono font-black text-emerald-600 dark:text-emerald-400";
+      } else {
+        sukliBox.className = "bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/40 p-2 rounded-lg flex items-center justify-between";
+        sukliText.innerText = `KULANG: -₱${Math.abs(sukli).toFixed(2)}`;
+        sukliText.className = "text-sm font-mono font-black text-rose-600 dark:text-rose-400";
+      }
+    }
+
+    function updateUtangCustomerPreview() {
+      const custId = document.getElementById('utang-customer-select').value;
+      const customBox = document.getElementById('utang-custom-name-box');
+
+      if (custId === 'NEW_CUSTOM') {
+        if (customBox) customBox.classList.remove('hidden');
+        document.getElementById('preview-debt').innerText = `₱0.00`;
+        document.getElementById('preview-limit').innerText = `₱3,000.00 (Default)`;
+      } else {
+        if (customBox) customBox.classList.add('hidden');
+        const cust = STATE.customers.find(c => c.id === custId);
+        if (cust) {
+          document.getElementById('preview-debt').innerText = `₱${cust.debt.toFixed(2)}`;
+          document.getElementById('preview-limit').innerText = `₱${cust.limit.toFixed(2)}`;
+        }
+      }
+    }
+
+    function processCheckout() {
+      if (STATE.cart.length === 0) {
+        alert("Cart is empty! Add products first.");
+        return;
+      }
+
+      let grandTotal = 0;
+      let totalCogs = 0;
+
+      STATE.cart.forEach(item => {
+        grandTotal += item.totalAmount;
+        totalCogs += (item.rawQty * item.unitCost);
+
+        if (!item.isCustom) {
+          const prod = STATE.products.find(p => p.id === item.productId);
+          if (prod) {
+            if (prod.isFuel) {
+              prod.stockLiters = Math.max(0, (prod.stockLiters || prod.stock || 0) - item.rawQty);
+            } else if (prod.isAgrivet) {
+              prod.stockKg = Math.max(0, (prod.stockKg || 0) - item.rawQty);
+            } else {
+              prod.stock = Math.max(0, (prod.stock || 0) - item.rawQty);
+            }
+          }
+        }
+      });
+
+      const cashTendered = parseFloat(document.getElementById('cash-tendered-input').value) || 0;
+
+      if (STATE.paymentMethod === 'cash' && cashTendered < grandTotal) {
+        alert(`Cash tendered (₱${cashTendered.toFixed(2)}) is less than Grand Total (₱${grandTotal.toFixed(2)})!`);
+        return;
+      }
+
+      let selectedCustomer = null;
+      if (STATE.paymentMethod === 'utang') {
+        const custId = document.getElementById('utang-customer-select').value;
+        if (custId === 'NEW_CUSTOM') {
+          const customName = document.getElementById('utang-custom-name-input').value.trim();
+          if (!customName) {
+            alert("Please type the name of the person using Utang!");
+            return;
+          }
+          let existing = STATE.customers.find(c => c.name.toLowerCase() === customName.toLowerCase());
+          if (!existing) {
+            existing = {
+              id: 'cust_' + Date.now(),
+              name: customName,
+              phone: '',
+              debt: 0,
+              limit: 3000
+            };
+            STATE.customers.push(existing);
+          }
+          selectedCustomer = existing;
+        } else {
+          selectedCustomer = STATE.customers.find(c => c.id === custId);
+        }
+
+        if (selectedCustomer) {
+          if (selectedCustomer.debt + grandTotal > selectedCustomer.limit) {
+            if (!confirm(`Warning: Purchase will exceed ${selectedCustomer.name}'s credit limit of ₱${selectedCustomer.limit.toFixed(2)}. Proceed anyway?`)) {
+              return;
+            }
+          }
+          selectedCustomer.debt += grandTotal;
+        }
+      }
+
+      const netProfit = grandTotal - totalCogs;
+      const txRef = 'TX-' + Date.now().toString().slice(-6);
+      const sukli = Math.max(0, cashTendered - grandTotal);
+
+      const tx = {
+        id: txRef,
+        date: new Date().toLocaleDateString(),
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        mode: STATE.paymentMethod,
+        customerId: selectedCustomer ? selectedCustomer.id : null,
+        customerName: selectedCustomer ? selectedCustomer.name : 'Cash Customer',
+        cartItems: [...STATE.cart],
+        grandTotal: grandTotal,
+        cogs: totalCogs,
+        netProfit: netProfit,
+        cashTendered: cashTendered,
+        sukli: sukli
+      };
+
+      STATE.transactions.unshift(tx);
+      saveState();
+
+      AudioEngine.checkout();
+
+      // Render Printable Receipt Modal
+      document.getElementById('receipt-tx-ref').innerText = `Ref: ${tx.id}`;
+      document.getElementById('receipt-mode').innerText = tx.mode.toUpperCase();
+      document.getElementById('receipt-grandtotal').innerText = `₱${grandTotal.toFixed(2)}`;
+      document.getElementById('receipt-tendered').innerText = `₱${cashTendered.toFixed(2)}`;
+      document.getElementById('receipt-sukli').innerText = `₱${sukli.toFixed(2)}`;
+
+      const itemsListContainer = document.getElementById('receipt-items-list');
+      itemsListContainer.innerHTML = tx.cartItems.map(i => `
+        <div class="flex justify-between">
+          <span>${i.name} x ${i.rawQty.toFixed(1)}</span>
+          <span class="font-bold">₱${i.totalAmount.toFixed(2)}</span>
+        </div>
+      `).join('');
+
+      if (tx.mode === 'utang') {
+        document.getElementById('receipt-cash-row').classList.add('hidden');
+        document.getElementById('receipt-sukli-row').classList.add('hidden');
+      } else {
+        document.getElementById('receipt-cash-row').classList.remove('hidden');
+        document.getElementById('receipt-sukli-row').classList.remove('hidden');
+      }
+
+      openModal('modal-receipt');
+  clearCart();
+  document.getElementById('cash-tendered-input').value = '';
+  const customNameInput = document.getElementById('utang-custom-name-input');
+  if (customNameInput) customNameInput.value = ''; // Clears input box after checkout
+  renderPOSGrid();
+    }
+
+    function renderInventory() {
+      const tbody = document.getElementById('inventory-table-body');
+      if (!tbody) return;
+
+      tbody.innerHTML = STATE.products.map(p => {
+        let stockDisplay = '';
+        let costBasis = '';
+        let unitCost = '';
+        let sellingPrice = '';
+        let unitProfit = '';
+        let isLow = false;
+
+        if (p.isFuel) {
+          const liters = p.stockLiters !== undefined ? p.stockLiters : (p.stock || 0);
+          const cLiters = p.containerLiters || 20;
+          const cCost = p.containerCost || 0;
+          const costL = p.costPerLiter !== undefined ? p.costPerLiter : (p.cost || 0);
+          const priceL = p.pricePerLiter !== undefined ? p.pricePerLiter : (p.price || 0);
+
+          if (liters <= 15) isLow = true;
+          stockDisplay = `<strong class="font-mono ${isLow ? 'text-rose-600 dark:text-rose-400 font-black' : 'text-slate-900 dark:text-white'}">${Number(liters).toFixed(1)} L</strong>`;
+          costBasis = `<span class="text-slate-500">Container (${cLiters}L @ ₱${Number(cCost).toFixed(0)})</span>`;
+          unitCost = `₱${Number(costL).toFixed(2)}/L`;
+          sellingPrice = `₱${Number(priceL).toFixed(2)}/L`;
+          unitProfit = `+₱${(priceL - costL).toFixed(2)}`;
+        } else if (p.isAgrivet) {
+          const sWeight = p.sackWeight || 50;
+          const stockKg = p.stockKg !== undefined ? p.stockKg : ((p.stock || 0) * sWeight);
+          const sCost = p.sackCost || 0;
+          const costKg = p.costPerKg !== undefined ? p.costPerKg : (p.cost || 0);
+          const priceKg = p.pricePerKg !== undefined ? p.pricePerKg : (p.price || 0);
+
+          if (stockKg <= 50) isLow = true;
+          const sacks = Math.floor(stockKg / sWeight);
+          stockDisplay = `<strong class="${isLow ? 'text-rose-600 dark:text-rose-400 font-black' : 'text-slate-900 dark:text-white'}">${sacks} Sacks (${stockKg.toFixed(0)}kg)</strong>`;
+          costBasis = `<span class="text-slate-500">Sack (${sWeight}kg @ ₱${Number(sCost).toFixed(0)})</span>`;
+          unitCost = `₱${Number(costKg).toFixed(2)}/kg`;
+          sellingPrice = `₱${Number(priceKg).toFixed(2)}/kg`;
+          unitProfit = `+₱${(priceKg - costKg).toFixed(2)}`;
+        } else {
+          const stock = p.stock !== undefined ? p.stock : 0;
+          const cost = p.cost !== undefined ? p.cost : 0;
+          const price = p.price !== undefined ? p.price : 0;
+
+          if (stock <= 10) isLow = true;
+          stockDisplay = `<strong class="font-mono ${isLow ? 'text-rose-600 dark:text-rose-400 font-black' : 'text-slate-900 dark:text-white'}">${stock} pcs</strong>`;
+          costBasis = `<span class="text-slate-500">Per Piece</span>`;
+          unitCost = `₱${Number(cost).toFixed(2)}`;
+          sellingPrice = `₱${Number(price).toFixed(2)}`;
+          unitProfit = `+₱${(price - cost).toFixed(2)}`;
+        }
+
+        return `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800">
+            <td class="p-3">
+              <div class="flex items-center gap-1.5">
+                <button onclick="togglePinProduct('${p.id}')" title="Pin as Top Fast-Seller" class="text-xs ${p.isPinned ? 'text-amber-500' : 'text-slate-300 dark:text-slate-700 hover:text-amber-500'}">
+                  <i class="fa-solid fa-thumbtack"></i>
+                </button>
+                <span class="font-bold text-slate-900 dark:text-white text-xs">${p.name}</span>
+                ${isLow ? `<span class="text-[9px] bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold px-1 py-0.5 rounded">Low</span>` : ''}
+              </div>
+              <span class="text-[10px] text-slate-400">Category: ${p.category || 'General'}</span>
+            </td>
+            <td class="p-3">${stockDisplay}</td>
+            <td class="p-3 text-[11px]">${costBasis}</td>
+            <td class="p-3 font-mono text-slate-500">${unitCost}</td>
+            <td class="p-3 font-mono font-bold text-slate-900 dark:text-white">${sellingPrice}</td>
+            <td class="p-3 font-mono font-bold text-emerald-600 dark:text-emerald-400">${unitProfit}</td>
+            <td class="p-3 text-right">
+              <button onclick="stockInProduct('${p.id}')" class="px-2.5 py-1.5 bg-emerald-50 dark:bg-slate-800 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-slate-700 font-bold rounded-lg text-xs touch-active">
+                <i class="fa-solid fa-plus mr-1 text-[10px]"></i> Stock In
+              </button>
+              <button onclick="deleteProduct('${p.id}')" class="px-2 py-1.5 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 font-bold rounded-lg text-xs touch-active ml-1">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function togglePinProduct(id) {
+      const prod = STATE.products.find(p => p.id === id);
+      if (prod) {
+        prod.isPinned = !prod.isPinned;
+        saveState();
+        renderInventory();
+        renderPOSGrid();
+      }
+    }
+
+    function deleteProduct(id) {
+      if (confirm("Remove this product from store catalog?")) {
+        STATE.products = STATE.products.filter(p => p.id !== id);
+        saveState();
+        renderInventory();
+        renderPOSGrid();
+      }
+    }
+
+    function stockInProduct(id) {
+      const prod = STATE.products.find(p => p.id === id);
+      if (!prod) return;
+
+      let promptMsg = "Enter additional quantity to stock in:";
+      if (prod.isFuel) promptMsg = "Enter additional Liters of fuel received:";
+      if (prod.isAgrivet) promptMsg = "Enter number of SACKS received (auto-converts to Kg):";
+
+      const added = prompt(promptMsg);
+      const qty = parseFloat(added);
+
+      if (!isNaN(qty) && qty > 0) {
+        if (prod.isFuel) {
+          prod.stockLiters = (prod.stockLiters || 0) + qty;
+        } else if (prod.isAgrivet) {
+          prod.stockKg = (prod.stockKg || 0) + (qty * (prod.sackWeight || 50));
+        } else {
+          prod.stock = (prod.stock || 0) + qty;
+        }
+        saveState();
+        renderInventory();
+        AudioEngine.beep(1200, 0.1);
+      }
+    }
+
+    function renderUtang() {
+      const grid = document.getElementById('utang-customers-grid');
+      grid.innerHTML = STATE.customers.map(c => {
+        const usagePercent = Math.min(100, Math.round((c.debt / c.limit) * 100));
+        let riskColor = 'bg-emerald-500';
+        let riskBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300';
+        let statusText = 'Low Risk';
+
+        if (usagePercent >= 85) {
+          riskColor = 'bg-rose-500';
+          riskBadge = 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300';
+          statusText = 'HIGH RISK / NEAR LIMIT';
+        } else if (usagePercent >= 60) {
+          riskColor = 'bg-amber-500';
+          riskBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300';
+          statusText = 'Moderate Risk';
+        }
+
+        return `
+          <div class="bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="font-bold text-slate-900 dark:text-white text-sm">${c.name}</h3>
+                  <span class="text-[11px] text-slate-400"><i class="fa-solid fa-phone text-[10px] mr-1"></i>${c.phone || 'No contact'}</span>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${riskBadge}">
+                  ${c.debt > 0 ? statusText : 'Cleared'}
+                </span>
+              </div>
+
+              <div class="mt-3 space-y-1">
+                <div class="flex justify-between text-xs font-mono">
+                  <span class="text-slate-500">Balance Utang:</span>
+                  <span class="font-black text-rose-600 dark:text-rose-400">₱${c.debt.toFixed(2)} / ₱${c.limit.toFixed(2)}</span>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-200 dark:border-slate-800">
+                  <div class="${riskColor} h-full transition-all" style="width: ${usagePercent}%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-900 grid grid-cols-2 gap-1.5">
+              <button onclick="openDebtHistoryModal('${c.id}')" class="py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-lg text-xs transition touch-active">
+                <i class="fa-solid fa-list-ul mr-1"></i> Items History
+              </button>
+              <button onclick="openPayDebtModal('${c.id}')" class="py-2 bg-emerald-600 hover:bg-emerald-500 text-white dark:bg-emerald-500 dark:text-slate-950 font-bold rounded-lg text-xs transition touch-active">
+                <i class="fa-solid fa-money-bill-transfer mr-1"></i> Record Pay
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openDebtHistoryModal(custId) {
+      const cust = STATE.customers.find(c => c.id === custId);
+      if (!cust) return;
+
+      document.getElementById('history-cust-name').innerText = `Customer: ${cust.name} (Current Debt: ₱${cust.debt.toFixed(2)})`;
+      const container = document.getElementById('debt-history-container');
+
+      const customerTxs = STATE.transactions.filter(t => t.mode === 'utang' && (t.customerId === cust.id || t.customerName === cust.name));
+      const customerPays = STATE.debtPayments.filter(p => p.customerId === cust.id);
+
+      if (customerTxs.length === 0 && customerPays.length === 0) {
+        container.innerHTML = `<p class="text-center text-slate-400 py-6">No recorded transaction logs for this debtor.</p>`;
+        openModal('modal-debt-history');
+        return;
+      }
+
+      let historyHtml = '';
+
+      if (customerTxs.length > 0) {
+        historyHtml += `<h4 class="font-bold text-slate-800 dark:text-slate-200 uppercase text-[10px] tracking-wider mb-2">Credit Purchases (Ano-ano nakuha)</h4>`;
+        historyHtml += customerTxs.map(tx => `
+          <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
+            <div class="flex justify-between font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">
+              <span>${tx.date || ''} ${tx.timestamp} (${tx.id})</span>
+              <span class="text-rose-600 dark:text-rose-400">₱${tx.grandTotal.toFixed(2)}</span>
+            </div>
+            <div class="pl-2 border-l-2 border-amber-400 space-y-0.5 text-[11px] text-slate-600 dark:text-slate-400">
+              ${(tx.cartItems || []).map(item => `
+                <div class="flex justify-between">
+                  <span>• ${item.name} x ${item.rawQty.toFixed(1)}</span>
+                  <span class="font-mono">₱${item.totalAmount.toFixed(2)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      if (customerPays.length > 0) {
+        historyHtml += `<h4 class="font-bold text-emerald-600 dark:text-emerald-400 uppercase text-[10px] tracking-wider mt-4 mb-2">Debt Payment Records</h4>`;
+        historyHtml += customerPays.map(p => `
+          <div class="bg-emerald-50 dark:bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/50 flex justify-between items-center text-xs">
+            <div>
+              <span class="font-bold text-emerald-800 dark:text-emerald-300 block">${p.channel} Payment</span>
+              <span class="text-[10px] text-slate-500">${p.timestamp} ${p.note ? '| ' + p.note : ''}</span>
+            </div>
+            <span class="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">-₱${p.amount.toFixed(2)}</span>
+          </div>
+        `).join('');
+      }
+
+      container.innerHTML = historyHtml;
+      openModal('modal-debt-history');
+    }
+
+    function renderAnalytics() {
+      const totalRev = STATE.transactions.reduce((acc, tx) => acc + tx.grandTotal, 0);
+      const totalProfit = STATE.transactions.reduce((acc, tx) => acc + tx.netProfit, 0);
+      const totalDebt = STATE.customers.reduce((acc, c) => acc + c.debt, 0);
+
+      document.getElementById('stat-revenue').innerText = `₱${totalRev.toFixed(2)}`;
+      document.getElementById('stat-profit').innerText = `₱${totalProfit.toFixed(2)}`;
+      document.getElementById('stat-debt').innerText = `₱${totalDebt.toFixed(2)}`;
+      document.getElementById('stat-tx-count').innerText = STATE.transactions.length;
+
+      const tbody = document.getElementById('analytics-table-body');
+      tbody.innerHTML = STATE.transactions.map(tx => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800">
+          <td class="p-3 font-mono text-slate-600 dark:text-slate-300">${tx.timestamp} <span class="text-[10px] text-slate-400">(${tx.id})</span></td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded font-bold text-[10px] ${tx.mode === 'cash' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">${tx.mode.toUpperCase()}</span></td>
+          <td class="p-3 font-medium text-slate-900 dark:text-white">${tx.customerName}</td>
+          <td class="p-3 font-mono font-bold text-slate-900 dark:text-white">₱${tx.grandTotal.toFixed(2)}</td>
+          <td class="p-3 font-mono text-slate-500">₱${tx.cogs.toFixed(2)}</td>
+          <td class="p-3 font-mono font-black text-emerald-600 dark:text-emerald-400">+₱${tx.netProfit.toFixed(2)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function clearAuditLog() {
+      if (confirm("Reset sales audit history?")) {
+        STATE.transactions = [];
+        saveState();
+        renderAnalytics();
+      }
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function toggleProductFormFields() {
+      const cat = document.getElementById('prod-category').value;
+      const fuelFields = document.getElementById('fuel-config-fields');
+      const agrivetFields = document.getElementById('agrivet-repack-fields');
+      const stdPricing = document.getElementById('standard-pricing-fields');
+
+      fuelFields.classList.add('hidden');
+      agrivetFields.classList.add('hidden');
+      stdPricing.classList.remove('hidden');
+
+      if (cat === 'Fuel') {
+        fuelFields.classList.remove('hidden');
+        document.getElementById('label-prod-stock').innerText = "Initial Liters";
+        document.getElementById('label-prod-cost').innerText = "Cost/L (₱)";
+        document.getElementById('label-prod-price').innerText = "Price/Liter (₱)";
+      } else if (cat === 'Agrivet') {
+        agrivetFields.classList.remove('hidden');
+        document.getElementById('label-prod-stock').innerText = "Initial Sacks";
+        document.getElementById('label-prod-cost').innerText = "Cost/kg (₱)";
+        document.getElementById('label-prod-price').innerText = "Retail Price/kg (₱)";
+      } else {
+        document.getElementById('label-prod-stock').innerText = "Initial Stock Qty";
+        document.getElementById('label-prod-cost').innerText = "Cost Price (₱)";
+        document.getElementById('label-prod-price').innerText = "Selling Price (₱)";
+      }
+    }
+
+    function calculateFuelDerivedCost() {
+      const cost = parseFloat(document.getElementById('fuel-container-cost').value) || 0;
+      const liters = parseFloat(document.getElementById('fuel-container-liters').value) || 0;
+      const derived = liters > 0 ? (cost / liters) : 0;
+      document.getElementById('fuel-derived-cost-text').innerText = `₱${derived.toFixed(2)} / L`;
+      document.getElementById('prod-cost').value = derived.toFixed(2);
+    }
+
+    function calculateAgrivetDerivedCost() {
+      const cost = parseFloat(document.getElementById('prod-sack-cost').value) || 0;
+      const weight = parseFloat(document.getElementById('prod-conversion-ratio').value) || 0;
+      const derived = weight > 0 ? (cost / weight) : 0;
+      document.getElementById('prod-cost').value = derived.toFixed(2);
+      const retailPrice = parseFloat(document.getElementById('prod-price-retail').value) || 0;
+      document.getElementById('prod-price').value = retailPrice.toFixed(2);
+    }
+
+    function handleSaveProduct(e) {
+      e.preventDefault();
+      const cat = document.getElementById('prod-category').value;
+      const name = document.getElementById('prod-name').value;
+      const isPinned = document.getElementById('prod-is-pinned').checked;
+
+      let newProd = { id: 'prod_' + Date.now(), name, category: cat, isPinned };
+
+      if (cat === 'Fuel') {
+        const containerCost = parseFloat(document.getElementById('fuel-container-cost').value) || 0;
+        const containerLiters = parseFloat(document.getElementById('fuel-container-liters').value) || 1;
+        const costPerLiter = containerCost / containerLiters;
+        const pricePerLiter = parseFloat(document.getElementById('prod-price').value) || 0;
+        const stockLiters = parseFloat(document.getElementById('prod-stock').value) || 0;
+
+        newProd = {
+          ...newProd,
+          isFuel: true,
+          containerCost,
+          containerLiters,
+          costPerLiter,
+          pricePerLiter,
+          stockLiters,
+          stock: stockLiters,
+          cost: costPerLiter,
+          price: pricePerLiter
+        };
+      } else if (cat === 'Agrivet') {
+        const sackCost = parseFloat(document.getElementById('prod-sack-cost').value) || 0;
+        const sackWeight = parseFloat(document.getElementById('prod-conversion-ratio').value) || 50;
+        const costPerKg = sackCost / sackWeight;
+        const sackPrice = parseFloat(document.getElementById('prod-sack-price').value) || 0;
+        const pricePerKg = parseFloat(document.getElementById('prod-price-retail').value) || 0;
+        const initialSacks = parseFloat(document.getElementById('prod-stock').value) || 0;
+
+        newProd = {
+          ...newProd,
+          isAgrivet: true,
+          sackCost,
+          sackWeight,
+          costPerKg,
+          sackPrice,
+          pricePerKg,
+          stockKg: initialSacks * sackWeight,
+          stock: initialSacks * sackWeight,
+          cost: costPerKg,
+          price: pricePerKg
+        };
+      } else {
+        newProd = {
+          ...newProd,
+          stock: parseFloat(document.getElementById('prod-stock').value) || 0,
+          cost: parseFloat(document.getElementById('prod-cost').value) || 0,
+          price: parseFloat(document.getElementById('prod-price').value) || 0
+        };
+      }
+
+      STATE.products.push(newProd);
+      saveState();
+      closeModal('modal-add-product');
+      renderInventory();
+      renderPOSGrid();
+    }
+
+    function handleSaveCustomer(e) {
+      e.preventDefault();
+      const newCust = {
+        id: 'cust_' + Date.now(),
+        name: document.getElementById('cust-name').value,
+        phone: document.getElementById('cust-phone').value,
+        debt: 0,
+        limit: parseFloat(document.getElementById('cust-limit').value)
+      };
+
+      STATE.customers.push(newCust);
+      saveState();
+      closeModal('modal-add-customer');
+      renderUtang();
+    }
+
+    function openPayDebtModal(custId) {
+      const cust = STATE.customers.find(c => c.id === custId);
+      if (!cust) return;
+      document.getElementById('pay-cust-id').value = cust.id;
+      document.getElementById('pay-cust-name').innerText = cust.name;
+      document.getElementById('pay-cust-debt').innerText = `₱${cust.debt.toFixed(2)}`;
+      openModal('modal-pay-utang');
+    }
+
+    function handlePayDebt(e) {
+      e.preventDefault();
+      const custId = document.getElementById('pay-cust-id').value;
+      const amount = parseFloat(document.getElementById('pay-amount').value);
+      const channel = document.getElementById('pay-channel').value;
+      const note = document.getElementById('pay-ref-note').value;
+      const cust = STATE.customers.find(c => c.id === custId);
+
+      if (cust && !isNaN(amount) && amount > 0) {
+        cust.debt = Math.max(0, cust.debt - amount);
+
+        STATE.debtPayments.unshift({
+          id: 'pay_' + Date.now(),
+          customerId: cust.id,
+          customerName: cust.name,
+          amount: amount,
+          channel: channel,
+          note: note,
+          timestamp: new Date().toLocaleString()
+        });
+
+        saveState();
+        closeModal('modal-pay-utang');
+        renderUtang();
+        AudioEngine.checkout();
+        alert(`Recorded ${channel} payment of ₱${amount.toFixed(2)} from ${cust.name}. Remaining Debt: ₱${cust.debt.toFixed(2)}`);
+      }
+    }
+
+    // JSON Data Export & Import Backup System
+    function exportSystemBackup() {
+      const backupData = {
+        products: STATE.products,
+        customers: STATE.customers,
+        transactions: STATE.transactions,
+        debtPayments: STATE.debtPayments,
+        exportDate: new Date().toISOString()
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `sari_sari_pos_backup_${new Date().toISOString().slice(0, 10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importSystemBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported.products && imported.customers) {
+            STATE.products = imported.products;
+            STATE.customers = imported.customers;
+            STATE.transactions = imported.transactions || [];
+            STATE.debtPayments = imported.debtPayments || [];
+            saveState();
+            closeModal('modal-backup');
+            alert("System restore complete! Reloading application data...");
+            location.reload();
+          } else {
+            alert("Invalid backup file structure.");
+          }
+        } catch (err) {
+          alert("Error parsing backup JSON file.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    window.onload = () => {
+      initTheme();
+      renderPOSGrid();
+      renderInventory();
+      renderCart();
+    };
+  </script>
+</body>
+</html>
